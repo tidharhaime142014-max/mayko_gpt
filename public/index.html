@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="he">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mayko GPT</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600&family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,500&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fcfbf9;--side:#f8f7f4;--line:#e9e6e0;--ink:#1a1a1a;--mute:#8a8780;--hov:#efede8;--card:#fff;--code:#16161a;color-scheme:light}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font:15px/1.55 Assistant,system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.brand{font-family:Fraunces,serif;font-style:italic;font-weight:500}
+/* sidebar */
+aside{width:260px;background:var(--side);border-inline-end:1px solid var(--line);display:flex;flex-direction:column;flex:none}
+aside h1{font-size:18px;padding:14px 16px;display:flex;gap:8px;align-items:center}
+aside h1 img{width:24px;height:24px}
+.new{margin:4px 10px 10px;padding:8px 10px;border-radius:9px;background:var(--hov);text-align:start;font-weight:500}
+.lbl{font-size:12px;color:var(--mute);padding:10px 16px 4px}
+#list{overflow:auto;flex:1;padding:0 6px 10px}
+#list button{display:block;width:100%;text-align:start;padding:7px 10px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#list button:hover,#list button.on{background:var(--hov)}
+/* chat */
+#chat{width:min(700px,48vw);min-width:360px;display:flex;flex-direction:column;border-inline-end:1px solid var(--line);flex:none}
+#msgs{flex:1;overflow:auto;padding:20px 18px;display:flex;flex-direction:column;gap:14px}
+.empty{margin:auto;text-align:center}
+.empty img{width:54px;margin-bottom:10px}
+.empty h2{font-size:26px;font-weight:500}
+.empty p{color:var(--mute);margin-top:6px}
+.m{max-width:92%;white-space:pre-wrap;word-break:break-word}
+.m.u{align-self:flex-end;background:var(--hov);padding:9px 13px;border-radius:14px}
+.m.a{align-self:flex-start}
+.chip{display:inline-flex;gap:6px;align-items:center;margin-top:8px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--mute);background:var(--card)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ink);animation:p 1s infinite alternate}
+@keyframes p{to{opacity:.2}}
+.composer{margin:0 14px 14px;border:1px solid var(--line);border-radius:18px;background:var(--card);padding:10px 12px;box-shadow:0 1px 0 rgba(0,0,0,.02)}
+textarea{width:100%;border:0;resize:none;outline:0;font:inherit;background:none;max-height:160px}
+.bar{display:flex;justify-content:space-between;align-items:center;color:var(--mute);font-size:13px}
+#send{background:var(--ink);color:#fff;border-radius:50%;width:32px;height:32px;display:grid;place-items:center;font-size:16px}
+#send:disabled{opacity:.3;cursor:default}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs:not(:empty){margin-bottom:8px}
+.th{position:relative;width:56px;height:56px}
+.th img{width:100%;height:100%;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.th button{position:absolute;top:-6px;inset-inline-end:-6px;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;line-height:1}
+.lft{display:flex;align-items:center;gap:6px}
+.plus{width:30px;height:30px;border-radius:8px;font-size:20px;line-height:1;color:var(--ink)}
+.plus:hover{background:var(--hov)}
+#model{font:inherit;font-size:13px;color:var(--mute);background:none;border:0;cursor:pointer;border-radius:8px;padding:4px}
+#model:hover{background:var(--hov)}
+.uimgs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.uimgs img{width:120px;max-height:120px;object-fit:cover;border-radius:10px}
+.drag .composer{border-color:var(--ink)}
+/* workspace */
+main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg)}
+.tabs{display:flex;align-items:center;gap:6px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.seg{display:flex;background:var(--hov);border-radius:9px;padding:2px}
+.seg button{padding:4px 14px;border-radius:7px;font-size:14px}
+.seg button.on{background:var(--card);box-shadow:0 0 0 1px var(--line)}
+.sp{flex:1}
+.tabs .act{padding:5px 11px;border-radius:8px;font-size:14px;color:var(--mute)}
+.tabs .act:hover{background:var(--hov);color:var(--ink)}
+.stage{flex:1;position:relative;min-height:0;display:flex;justify-content:center;background:var(--side)}
+iframe{border:0;background:#fff;height:100%;width:100%;transition:width .2s}
+iframe.m{width:390px;border-inline:1px solid var(--line)}
+#code{position:absolute;inset:0;margin:0;padding:18px 20px;overflow:auto;background:var(--code);color:#e8e6e1;font:13px/1.65 "JetBrains Mono",monospace;white-space:pre;direction:ltr;text-align:left;display:none}
+.ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--mute);text-align:center;pointer-events:none}
+@media(max-width:900px){aside{display:none}#chat{width:48vw}}
+@media(max-width:640px){body{flex-direction:column;overflow:auto}#chat{width:100%;min-width:0;height:60vh}main{height:80vh}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<aside>
+  <h1 class="brand"><img src="logo.png" alt="">Mayko GPT</h1>
+  <button class="new" id="new">+ שיחה חדשה</button>
+  <div class="lbl">שיחות</div>
+  <div id="list"></div>
+</aside>
+
+<section id="chat">
+  <div id="msgs"></div>
+  <div class="composer">
+    <div class="thumbs" id="thumbs"></div>
+    <textarea id="in" rows="2" placeholder="מה נבנה היום? אפשר גם להעלות תמונה לעיצוב" dir="auto"></textarea>
+    <div class="bar">
+      <span class="lft">
+        <button class="plus" id="attach" aria-label="צרף תמונה" title="צרף תמונה">+</button>
+        <select id="model" aria-label="דגם"><option value="gemini-3.8-flash">מהיר</option><option value="gemini-3.1-pro-preview">חכם יותר (Pro)</option></select>
+      </span>
+      <button id="send" aria-label="שליחה" disabled>↑</button>
+    </div>
+    <input type="file" id="file" accept="image/*" multiple hidden>
+  </div>
+</section>
+
+<main>
+  <div class="tabs">
+    <div class="seg"><button id="tPrev" class="on">תצוגה מקדימה</button><button id="tCode">קוד</button></div>
+    <div class="seg"><button id="dDesk" class="on">מחשב</button><button id="dMob">מובייל</button></div>
+    <span class="sp"></span>
+    <button class="act" id="copy">העתק</button>
+    <button class="act" id="dl">הורד</button>
+    <button class="act" id="open">פתח בלשונית</button>
+  </div>
+  <div class="stage">
+    <iframe id="frame" sandbox="allow-scripts allow-forms allow-modals allow-popups" title="תצוגה מקדימה"></iframe>
+    <pre id="code"></pre>
+    <div class="ph" id="ph">התצוגה המקדימה תופיע כאן</div>
+  </div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+let chats=JSON.parse(localStorage.getItem("mayko.chats")||"[]"), cur=null, busy=false, html="";
+const save=()=>{try{localStorage.setItem("mayko.chats",JSON.stringify(chats.slice(0,40).map(x=>({...x,messages:x.messages.map(m=>({role:m.role,content:m.content}))}))))}catch{}};
+let pend=[];
+const upd=()=>{$("send").disabled=busy||(!$("in").value.trim()&&!pend.length)};
+const toData=f=>new Promise(r=>{const im=new Image(),u=URL.createObjectURL(f);im.onload=()=>{const k=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);r(c.toDataURL("image/jpeg",.82))};im.onerror=()=>r(null);im.src=u});
+async function addFiles(fs){for(const f of fs){if(!f.type.startsWith("image/")||pend.length>=4)continue;const d=await toData(f);if(d)pend.push(d)}drawThumbs();upd()}
+function drawThumbs(){const t=$("thumbs");t.innerHTML="";pend.forEach((d,i)=>{const w=document.createElement("div");w.className="th";const im=new Image();im.src=d;im.alt="";w.appendChild(im);const b=document.createElement("button");b.textContent="×";b.setAttribute("aria-label","הסר תמונה");b.onclick=()=>{pend.splice(i,1);drawThumbs();upd()};w.appendChild(b);t.appendChild(w)})}
+
+// חילוץ הקוד מתוך תשובת ה-AI (גם כשהבלוק עדיין לא נסגר)
+function split(t){
+  const m=t.match(/```(?:html)?\s*\n([\s\S]*?)(```|$)/i);
+  if(!m) return {text:t,code:"",open:false};
+  return {text:(t.slice(0,m.index)+(m[2]?t.slice(m.index+m[0].length):"")).trim(),code:m[1],open:!m[2]};
+}
+function render(){
+  const c=chats.find(x=>x.id===cur), box=$("msgs"); box.innerHTML="";
+  if(!c||!c.messages.length){
+    box.innerHTML='<div class="empty"><img src="logo.png" alt=""><h2 class="brand">Mayko GPT</h2><p>תאר מה לבנות, ואני אכתוב את הקוד.</p></div>';
+  } else c.messages.forEach((m,i)=>{
+    const d=document.createElement("div"), s=m.role==="assistant"?split(m.content):{text:m.content};
+    d.className="m "+(m.role==="user"?"u":"a"); d.dir="auto"; d.textContent=s.text;
+    if(m.images&&m.images.length){const t=document.createElement("div");t.className="uimgs";m.images.forEach(src=>{const im=new Image();im.src=src;im.alt="";t.appendChild(im)});d.prepend(t);}
+    if(m.role==="assistant"&&s.code){const ch=document.createElement("div");ch.className="chip";
+      ch.innerHTML=(busy&&i===c.messages.length-1&&s.open)?'<span class="dot"></span>כותב קוד…':'✓ הקוד מוכן';d.appendChild(ch);}
+    box.appendChild(d);
+  });
+  box.scrollTop=box.scrollHeight;
+  $("list").innerHTML=""; chats.forEach(x=>{const b=document.createElement("button");b.textContent=x.title;b.dir="auto";
+    if(x.id===cur)b.className="on";b.onclick=()=>{if(!busy){cur=x.id;lastCode();render();}};$("list").appendChild(b);});
+}
+function lastCode(){
+  const c=chats.find(x=>x.id===cur); html="";
+  if(c)for(const m of c.messages)if(m.role==="assistant"){const s=split(m.content);if(s.code)html=s.code;}
+  show();
+}
+let tmr; function show(){
+  $("code").textContent=html; $("ph").style.display=html?"none":"grid";
+  clearTimeout(tmr); tmr=setTimeout(()=>{$("frame").srcdoc=html||""},250);
+}
+
+async function send(){
+  const v0=$("in").value.trim(); if((!v0&&!pend.length)||busy) return;
+  const v=v0||"בנה בדיוק את העיצוב שמופיע בתמונה";
+  let c=chats.find(x=>x.id===cur);
+  if(!c){c={id:Date.now(),title:(v0||"עיצוב מתמונה").slice(0,40),messages:[]};chats.unshift(c);cur=c.id;}
+  c.messages.push({role:"user",content:v,images:pend.slice()},{role:"assistant",content:""});
+  pend=[]; drawThumbs(); $("in").value=""; $("in").style.height="auto"; $("send").disabled=true; busy=true; render();
+  const a=c.messages[c.messages.length-1];
+  try{
+    const r=await fetch("/api/chat",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({messages:c.messages.slice(0,-1).map((m,i,arr)=>i===arr.length-1?m:{role:m.role,content:m.content}),model:$("model").value})});
+    if(!r.ok) throw new Error(await r.text());
+    const rd=r.body.getReader(), dec=new TextDecoder(); let buf="";
+    for(;;){
+      const {done,value}=await rd.read(); if(done)break;
+      buf+=dec.decode(value,{stream:true}); const lines=buf.split("\n"); buf=lines.pop();
+      for(const l of lines){ if(!l.startsWith("data:"))continue;
+        try{const j=JSON.parse(l.slice(5)); if(j.type==="content_block_delta"&&j.delta.text){
+          a.content+=j.delta.text; const s=split(a.content); if(s.code){html=s.code;show();} render();}}catch{} }
+    }
+  }catch(e){ a.content+="\n\nשגיאה: "+(e.message||e).slice(0,300); }
+  busy=false; save(); render(); upd();
+}
+
+$("send").onclick=send;
+$("in").addEventListener("input",e=>{upd();e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,160)+"px"});
+$("in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
+$("attach").onclick=()=>$("file").click();
+$("file").onchange=e=>{addFiles([...e.target.files]);e.target.value=""};
+$("in").addEventListener("paste",e=>{const f=[...(e.clipboardData?.files||[])];if(f.length){e.preventDefault();addFiles(f)}});
+addEventListener("dragover",e=>{e.preventDefault();document.body.classList.add("drag")});
+addEventListener("dragleave",e=>{if(!e.relatedTarget)document.body.classList.remove("drag")});
+addEventListener("drop",e=>{e.preventDefault();document.body.classList.remove("drag");addFiles([...e.dataTransfer.files])});
+try{const sm=localStorage.getItem("mayko.model");if(sm&&[...$("model").options].some(o=>o.value===sm))$("model").value=sm}catch{}
+$("model").onchange=()=>{try{localStorage.setItem("mayko.model",$("model").value)}catch{}};
+$("new").onclick=()=>{if(busy)return;cur=null;html="";show();render();$("in").focus()};
+const tab=p=>{$("tPrev").classList.toggle("on",p);$("tCode").classList.toggle("on",!p);$("frame").style.display=p?"":"none";$("code").style.display=p?"none":"block"};
+$("tPrev").onclick=()=>tab(true); $("tCode").onclick=()=>tab(false);
+const dev=d=>{$("dDesk").classList.toggle("on",!d);$("dMob").classList.toggle("on",d);$("frame").classList.toggle("m",d)};
+$("dDesk").onclick=()=>dev(false); $("dMob").onclick=()=>dev(true);
+$("copy").onclick=async()=>{await navigator.clipboard.writeText(html);$("copy").textContent="הועתק ✓";setTimeout(()=>$("copy").textContent="העתק",1400)};
+$("dl").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));a.download="mayko-project.html";a.click()};
+$("open").onclick=()=>{if(html)window.open(URL.createObjectURL(new Blob([html],{type:"text/html"})))};
+if(chats.length){cur=chats[0].id;lastCode();}
+render();
+</script>
+</body>
+</html>
